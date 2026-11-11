@@ -27,8 +27,7 @@ jobs:
 
       - name: Free up disk space
         run: |
-          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/share/boost
-          sudo apt-get clean
+          true  # hosted-image disk cleanup; not applicable on ARC (ZO-153433)
           df -h /
 
       - name: Set up Docker Buildx

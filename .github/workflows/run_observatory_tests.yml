@@ -81,10 +81,10 @@ jobs:
       - name: Start cloudflared tunnel
         run: |
           # Install cloudflared (pinned version + checksum)
-          curl -sL https://github.com/cloudflare/cloudflared/releases/download/2025.2.1/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
-          echo "afdfadd1ef552e66bffc35246fe30a9bd578356d2d386de95585ccfc432472b8  /usr/local/bin/cloudflared" | sha256sum -c -
-          chmod +x /usr/local/bin/cloudflared
-
+          mkdir -p "$HOME/.local/bin" && curl -sL https://github.com/cloudflare/cloudflared/releases/download/2025.2.1/cloudflared-linux-amd64 -o "$HOME/.local/bin/cloudflared"
+          echo "afdfadd1ef552e66bffc35246fe30a9bd578356d2d386de95585ccfc432472b8  $HOME/.local/bin/cloudflared" | sha256sum -c -
+          chmod +x "$HOME/.local/bin/cloudflared"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"; export PATH="$HOME/.local/bin:$PATH"
           # Start a quick tunnel (no account needed) and capture the URL
           cloudflared tunnel --url http://localhost:4000 --no-autoupdate > /tmp/cloudflared.log 2>&1 &
           CLOUDFLARED_PID=$!
