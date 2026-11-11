@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   read-version:
-    runs-on: ubuntu-latest
+    runs-on: python-ci
 
     steps:
       - name: Checkout code

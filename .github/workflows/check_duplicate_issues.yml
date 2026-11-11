@@ -6,7 +6,7 @@ on:
 
 jobs:
   check-duplicate:
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     permissions:
       issues: write
       contents: read

@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   run-llm-translation-tests:
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     timeout-minutes: 90
 
     steps:
