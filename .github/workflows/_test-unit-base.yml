@@ -38,7 +38,7 @@ permissions:
 jobs:
   run:
     name: Run tests
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
     steps:
@@ -107,7 +107,7 @@ jobs:
     name: Upload coverage to Codecov
     needs: run
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     permissions:
       contents: read
       id-token: write

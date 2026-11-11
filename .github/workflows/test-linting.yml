@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     timeout-minutes: 5
 
     steps:
@@ -88,7 +88,7 @@ jobs:
           uv run --no-sync python -c "from litellm import *" || (echo '🚨 import failed, this means you introduced unprotected imports! 🚨'; exit 1)
 
   secret-scan:
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     timeout-minutes: 5
     permissions:
       contents: read
