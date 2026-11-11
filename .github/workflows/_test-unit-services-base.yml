@@ -56,25 +56,30 @@ permissions:
 jobs:
   run:
     name: Run tests
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
-    services:
-      postgres:
-        image: postgres@sha256:705a5d5b5836f3fcba0d02c4d281e6a7dd9ed2dd4078640f08a1e1e9896e097d # postgres:14
-        env:
-          POSTGRES_USER: litellm
-          POSTGRES_PASSWORD: litellm
-          POSTGRES_DB: litellm_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
+      - name: Start local Postgres 16 on the runner (replaces services:postgres; no Docker on ARC)
+        shell: bash
+        env:
+          PGDATABASE: "litellm_test"
+          PGUSER: "litellm"
+          PGPORT: "5432"
+          LANG: C.UTF-8
+          LC_ALL: C.UTF-8
+        run: |
+          set -euo pipefail
+          PGBIN=/usr/lib/postgresql/16/bin
+          D="$RUNNER_TEMP/pg"; LOG="$RUNNER_TEMP/pg.log"; rm -rf "$D"
+          "$PGBIN/initdb" -D "$D" -U "$PGUSER" --auth=trust --locale=C.utf8 --encoding=UTF8 >/dev/null
+          printf 'max_connections = 200\nfsync = off\nsynchronous_commit = off\nfull_page_writes = off\n' >> "$D/postgresql.conf"
+          "$PGBIN/pg_ctl" -D "$D" -o "-p $PGPORT -k $RUNNER_TEMP -c listen_addresses=127.0.0.1" -l "$LOG" start
+          for _ in $(seq 1 30); do "$PGBIN/pg_isready" -h 127.0.0.1 -p "$PGPORT" -U "$PGUSER" -d postgres >/dev/null 2>&1 && break; sleep 1; done
+          "$PGBIN/pg_isready" -h 127.0.0.1 -p "$PGPORT" -U "$PGUSER" -d postgres || { tail -n 200 "$LOG"; exit 1; }
+          "$PGBIN/psql" -h 127.0.0.1 -p "$PGPORT" -U "$PGUSER" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$PGDATABASE'" | grep -qx 1 \
+            || "$PGBIN/psql" -h 127.0.0.1 -p "$PGPORT" -U "$PGUSER" -d postgres -c "CREATE DATABASE \"$PGDATABASE\""
+          echo "$PGBIN" >> "$GITHUB_PATH"
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           persist-credentials: false
@@ -161,7 +166,7 @@ jobs:
     name: Upload coverage to Codecov
     needs: run
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: python-ci
     permissions:
       contents: read
       id-token: write
